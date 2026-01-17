@@ -242,7 +242,14 @@
   let residentData = [], tempBatch = [], allParcels = [], selectedIds = new Set(), signaturePad = null;
   let config = { locations: [], couriers: [] };
   let deferredPrompt; // 用於儲存 PWA 安裝事件
+  // ================= 核心配置 (必須喺最頂) =================
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNeslLDmf6SHD_N00IT8tmoBMa0zRiKWfXAuhhLUV_ZRD4c8PUdIScrHaRudDbNdRkKg/exec"; 
+  const APP_PIN_KEY = "met1_app_pin"; 
+  // =======================================================
 
+  let residentData = [], tempBatch = [], allParcels = [], selectedIds = new Set(), signaturePad = null;
+  let config = { locations: [], couriers: [] };
+  let deferredPrompt;
   // 從第一部分繼承的 APP_PIN_KEY
   // const APP_PIN_KEY = "met1_app_pin"; 
   // const WEB_APP_URL = "https://script.google.com/.../exec";
@@ -647,3 +654,4 @@
 </script>
 </body>
 </html>
+
