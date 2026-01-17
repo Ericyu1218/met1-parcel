@@ -8,64 +8,55 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#D00000">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root { --met-red: #D00000; --met-black: #000000; }
-    body { background-color: #f8f9fa; padding-bottom: 100px; font-family: -apple-system, system-ui, sans-serif; }
+    body { background-color: #f8f9fa; padding-bottom: 100px; font-family: sans-serif; }
     
-    /* Header & UI Components */
+    /* UI 基礎樣式 */
     .app-header { background-color: var(--met-black); color: white; padding: 10px 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     .app-logo { height: 30px; margin-right: 10px; }
     .menu-trigger { cursor: pointer; padding: 5px; font-size: 1.5rem; }
-    
-    .staff-bar { background: white; padding: 8px 15px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
-    .staff-input { border: 1px solid #ccc; border-radius: 5px; padding: 4px 8px; flex-grow: 1; font-weight: bold; }
-    
-    /* Badges & Info Boxes */
     .no-email-badge { background-color: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; font-weight: bold; margin-left: 5px; }
     .unit-info-box { font-size: 0.9rem; margin-top: 5px; padding: 5px 10px; border-radius: 5px; background: #e7f3ff; color: #0056b3; }
     .monthly-badge { background: #ffeded; color: #d00000; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
     
-    /* Navigation */
-    .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; height: 65px; display: flex; z-index: 1000; }
-    .nav-btn { flex: 1; border: none; background: none; color: #6c757d; font-size: 0.7rem; padding-top: 10px; }
-    .nav-btn.active { color: var(--met-red); font-weight: bold; }
-    
-    /* Parcel Cards */
-    .parcel-card { background: white; border-radius: 8px; margin-bottom: 10px; padding: 12px; border: 2px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .parcel-card.selected { border-color: var(--met-red); background-color: #fff5f5; }
-    .custom-check { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-    .selected .custom-check { background: var(--met-red); border-color: var(--met-red); color: white; display: flex; align-items: center; justify-content: center; }
-    .selected .custom-check::after { content: '✓'; font-size: 14px; }
-    
-    /* Dropdown & Overlays */
-    .custom-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; background: white; border: 1px solid #ddd; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .dropdown-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+    /* 隱藏選單 Overlay 核心樣式 (還原 GAS 版) */
     #toolOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: none; overflow-y: auto; }
     .overlay-header { background: #333; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-    
-    /* Storage Visualizer */
+
+    /* 貨架點算佈局樣式 (還原 GAS 版) */
     .location-header { background: #f0f0f0; padding: 5px 10px; font-weight: bold; border-left: 4px solid #333; margin-top: 15px; }
     .storage-row { display: flex; border-bottom: 1px solid #eee; padding: 8px 0; align-items: center; }
     .range-label { width: 120px; font-weight: bold; font-size: 0.8rem; color: #666; flex-shrink: 0; }
     .unit-container { display: flex; flex-wrap: wrap; gap: 5px; }
     .unit-tag { background: #f8f9fa; border: 1px solid #ddd; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
     
-    /* Signature Pad */
-    #signature-pad { border: 2px dashed #ccc; background: #fff; width: 100%; height: 200px; touch-action: none; }
+    /* 導覽與卡片樣式 */
+    .staff-bar { background: white; padding: 8px 15px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+    .staff-input { border: 1px solid #ccc; border-radius: 5px; padding: 4px 8px; flex-grow: 1; font-weight: bold; }
+    .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; height: 65px; display: flex; z-index: 1000; }
+    .nav-btn { flex: 1; border: none; background: none; color: #6c757d; font-size: 0.7rem; padding-top: 10px; }
+    .nav-btn.active { color: var(--met-red); font-weight: bold; }
+    .parcel-card { background: white; border-radius: 8px; margin-bottom: 10px; padding: 12px; border: 2px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .parcel-card.selected { border-color: var(--met-red); background-color: #fff5f5; }
+    .custom-check { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
+    .selected .custom-check { background: var(--met-red); border-color: var(--met-red); color: white; display: flex; align-items: center; justify-content: center; }
+    .selected .custom-check::after { content: '✓'; font-size: 14px; }
+    .custom-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; background: white; border: 1px solid #ddd; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .dropdown-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
     
-    /* Location Colors */
+    /* 位置顏色標籤 */
     .bg-loc-lobby { background-color: #ffc107 !important; color: #000 !important; }
     .bg-loc-shelf { background-color: #0d6efd !important; color: #fff !important; }
     .bg-loc-bag   { background-color: #198754 !important; color: #fff !important; }
     .bg-loc-floor { background-color: #6c757d !important; color: #fff !important; }
     .bg-loc-default { background-color: #f8f9fa !important; color: #333 !important; border: 1px solid #ddd; }
+    #signature-pad { border: 2px dashed #ccc; background: #fff; width: 100%; height: 200px; touch-action: none; }
   </style>
 </head>
-
-  <body>
+<body>
 
 <div id="toolOverlay">
   <div class="overlay-header">
@@ -87,8 +78,8 @@
         <b>📦 Storage Visualizer | 貨架分佈</b>
         <button class="btn btn-xs btn-light" onclick="refreshStorageVisual()">Refresh | 刷新</button>
       </div>
-      <div class="card-body" id="visualStorageArea">
-        <p class="text-muted text-center">Loading storage data... | 正在載入貨架數據...</p>
+      <div class="card-body p-0" id="visualStorageArea">
+        <p class="text-muted text-center py-4">Loading storage data... | 正在載入貨架數據...</p>
       </div>
     </div>
 
@@ -115,14 +106,14 @@
 
 <div class="staff-bar">
   <label class="small fw-bold text-muted">👤 Staff | 職員:</label>
-  <input type="text" id="currentStaff" class="staff-input" placeholder="Enter Name | 輸入姓名">
+  <input type="text" id="currentStaff" class="staff-input" placeholder="Name | 姓名">
 </div>
 
 <div id="tab-receive" class="container py-3">
   <div class="card p-3 shadow-sm mb-3">
     <h6 class="fw-bold mb-3">📦 Batch Input | 批量錄入</h6>
     <div class="position-relative mb-2">
-      <label class="small fw-bold text-muted">UNIT / NAME | 單位 / 姓名</label>
+      <label class="small fw-bold text-muted">UNIT / NAME / PHONE | 單位 / 姓名 / 電話</label>
       <input type="text" id="inputUnit" class="form-control form-control-lg" placeholder="Type to search..." autocomplete="off">
       <div id="unitDropdown" class="custom-dropdown"></div>
     </div>
@@ -130,7 +121,7 @@
     <div id="unitInfoBox" class="unit-info-box" style="display:none;">
       <div class="d-flex justify-content-between align-items-center">
         <span id="displayName" class="fw-bold">---</span>
-        <span id="monthlyCount" class="monthly-badge">Wait...</span>
+        <span id="monthlyCount" class="monthly-badge">...</span>
       </div>
     </div>
 
@@ -172,7 +163,7 @@
       <div class="col-6"><label class="small fw-bold text-muted">AMOUNT | 金額 ($)</label><input type="number" id="payAmount" class="form-control" placeholder="10"></div>
     </div>
     <div class="mb-3">
-      <label class="small fw-bold text-muted">RECEIPT # / NAME | 收據編號 / 姓名</label>
+      <label class="small fw-bold text-muted">RECEIPT / NAME | 收據 / 姓名</label>
       <div class="d-flex gap-2">
         <input type="text" id="payReceipt" class="form-control" placeholder="Receipt#">
         <input type="text" id="payBy" class="form-control" placeholder="Name">
@@ -194,64 +185,30 @@
   <button class="nav-btn" id="btn-nav-history" onclick="switchTab('history')"><div>📜</div>History</button>
 </div>
 
-<div class="modal fade" id="verifyModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header bg-dark text-white"><h5 class="modal-title">Final Check | 最後對稿</h5></div>
-      <div class="modal-body p-0">
-        <table class="table table-striped mb-0 small">
-          <thead class="table-light"><tr><th class="ps-3">Unit</th><th>Resident</th><th>Courier</th></tr></thead>
-          <tbody id="verifyTableBody"></tbody>
-        </table>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Edit | 修改</button>
-        <button class="btn btn-danger flex-grow-1" onclick="finalizeBatchReceive()">Confirm & Send ✅ | 確認並發送</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="modal fade" id="verifyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Final Check | 最後對稿</h5></div><div class="modal-body p-0"><table class="table table-striped mb-0 small"><thead class="table-light"><tr><th class="ps-3">Unit</th><th>Resident</th><th>Courier</th></tr></thead><tbody id="verifyTableBody"></tbody></table></div><div class="modal-footer"><button class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Edit</button><button class="btn btn-danger flex-grow-1" onclick="finalizeBatchReceive()">Confirm ✅</button></div></div></div></div>
 
-<div class="modal fade" id="signModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Confirm Pickup | 確認領取</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <canvas id="signature-pad"></canvas>
-        <div class="form-check mt-3">
-          <input class="form-check-input" type="checkbox" id="bypassSign">
-          <label class="form-check-label fw-bold text-danger" for="bypassSign">Skip Signature | 跳過簽名</label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary w-100 py-4 fw-bold fs-4 shadow" onclick="processPickup()">Confirm Pickup</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="modal fade" id="signModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirm Pickup</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><canvas id="signature-pad"></canvas><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="bypassSign"><label class="form-check-label text-danger" for="bypassSign">Skip Signature | 跳過簽名</label></div></div><div class="modal-footer"><button class="btn btn-primary w-100 py-4 fw-bold fs-4 shadow" onclick="processPickup()">Confirm Pickup</button></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-  // ================= 1. 核心配置 =================
+  <script>
+  // ================= 1. 核心配置與全域變數 =================
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNeslLDmf6SHD_N00IT8tmoBMa0zRiKWfXAuhhLUV_ZRD4c8PUdIScrHaRudDbNdRkKg/exec"; 
   const APP_PIN_KEY = "met1_app_pin"; 
 
-  // ================= 2. 全域變數 =================
   let residentData = [], tempBatch = [], allParcels = [], selectedIds = new Set(), signaturePad = null;
   let config = { locations: [], couriers: [] };
-  let deferredPrompt; // 用於 PWA 安裝
+  let deferredPrompt; // 用於儲存 PWA 安裝事件
 
-  // ================= 3. PWA 核心監聽 (Service Worker) =================
+  // ================= 2. PWA 核心監聽 (Service Worker) =================
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(() => console.log("SW Registered"));
   }
 
+  // 監聽安裝提示 (僅 Android Chrome 或桌面版支援)
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -259,7 +216,8 @@
     if (installBox) installBox.style.display = 'block';
   });
 
-  // ================= 4. 核心 API 通訊 (Fetch) =================
+  // ================= 3. 核心 API 通訊 (Fetch 模式) =================
+
   async function apiCall(action, params = {}, method = 'GET') {
     const pin = localStorage.getItem(APP_PIN_KEY);
     if (!pin && action !== 'verifyPin') { checkAppPin(); return Promise.reject("Missing PIN"); }
@@ -270,6 +228,7 @@
     if (method === 'POST') {
       options.body = JSON.stringify(params);
     } else {
+      // GET 請求：將參數附帶在網址後
       for (let key in params) {
         if (key !== 'action' && key !== 'pin') url += `&${key}=${encodeURIComponent(params[key])}`;
       }
@@ -281,6 +240,7 @@
       if (data.status === "error") throw new Error(data.message);
       return data;
     } catch (err) {
+      // 如果 PIN 錯誤，清除緩存並要求重新登入
       if (err.message.includes("PIN") || err.message.includes("Access Denied")) {
         localStorage.removeItem(APP_PIN_KEY);
         checkAppPin();
@@ -290,13 +250,15 @@
     }
   }
 
-  // ================= 5. 初始化與自動同步 =================
+  // ================= 4. 初始化與自動同步邏輯 =================
+
   window.onload = function() {
-    checkAppPin();
-    restoreFromCache();
+    checkAppPin();      // 1. 安全檢查
+    restoreFromCache(); // 2. 緩存秒開
+    
+    // 職員名稱自動保存與清理
     checkShiftChange();
     setInterval(checkShiftChange, 60000);
-
     const savedStaff = localStorage.getItem('met1_staff_name');
     if (savedStaff) document.getElementById('currentStaff').value = savedStaff;
     document.getElementById('currentStaff').oninput = (e) => {
@@ -304,10 +266,12 @@
       localStorage.setItem('met1_staff_last_update', new Date().getTime());
     };
 
+    // 簽名板初始化 (修正白底與縮放)
     const canvas = document.getElementById('signature-pad');
-    if (canvas) signaturePad = new SignaturePad(canvas, { backgroundColor: 'white' });
+    if (canvas) signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
     document.getElementById('signModal').addEventListener('shown.bs.modal', resizeCanvas);
 
+    // 🚀 PWA 安裝按鈕處理
     document.getElementById('btnInstallApp')?.addEventListener('click', async () => {
       if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -317,48 +281,82 @@
       }
     });
 
+    // 🚀 視窗可見性監測 (解決 Reload 問題：切換回來就同步)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') refreshAllData();
+      if (document.visibilityState === 'visible') {
+        console.log("App active, background syncing...");
+        refreshAllData();
+      }
     });
 
-    refreshAllData();
+    refreshAllData(); // 初次載入執行背景同步
 
+    // 單位搜尋事件
     document.getElementById('inputUnit').addEventListener('input', handleUnitInput);
     document.addEventListener('click', e => { 
       if (!e.target.closest('#inputUnit')) document.getElementById('unitDropdown').style.display = 'none'; 
     });
   };
 
-  // ================= 6. 業務邏輯函數 =================
-
+  /**
+   * PIN 碼登入介面
+   */
   function checkAppPin() {
     if (!localStorage.getItem(APP_PIN_KEY)) {
       Swal.fire({
-        title: 'System Access', text: 'Enter PIN:', input: 'password', allowOutsideClick: false,
-        preConfirm: (v) => v || Swal.showValidationMessage('Required')
-      }).then(r => { if (r.isConfirmed) { localStorage.setItem(APP_PIN_KEY, r.value); refreshAllData(); } });
+        title: 'Security Check | 安全檢查',
+        text: 'Please enter System PIN | 請輸入系統 PIN:',
+        input: 'password',
+        allowOutsideClick: false,
+        confirmButtonText: 'Login | 登入',
+        confirmButtonColor: '#D00000',
+        preConfirm: (v) => v || Swal.showValidationMessage('PIN is required')
+      }).then(r => {
+        if (r.isConfirmed) {
+          localStorage.setItem(APP_PIN_KEY, r.value);
+          refreshAllData();
+        }
+      });
     }
   }
 
+  /**
+   * 從 LocalStorage 恢復緩存 (實現 0 秒開啟)
+   */
   function restoreFromCache() {
-    const r = localStorage.getItem('cache_residents'), c = localStorage.getItem('cache_config');
-    if (r) residentData = JSON.parse(r);
-    if (c) { config = JSON.parse(c); updateDropdowns(config); }
+    const cachedResidents = localStorage.getItem('cache_residents');
+    const cachedConfig = localStorage.getItem('cache_config');
+    if (cachedResidents) residentData = JSON.parse(cachedResidents);
+    if (cachedConfig) { 
+      config = JSON.parse(cachedConfig); 
+      updateDropdowns(config); 
+    }
   }
 
+  /**
+   * 背景靜默更新數據
+   */
   function refreshAllData() {
+    // 同步住戶清單
     apiCall('getResidents').then(res => {
       residentData = res.data;
       localStorage.setItem('cache_residents', JSON.stringify(res.data));
-    });
+    }).catch(e => console.warn("Background resident sync failed."));
+
+    // 同步快遞與位置配置
     apiCall('getConfig').then(res => {
       config = res.data;
       localStorage.setItem('cache_config', JSON.stringify(res.data));
       updateDropdowns(res.data);
-    });
+    }).catch(e => console.warn("Background config sync failed."));
+
+    // 如果當前在領取分頁，同步包裹數據
     if (document.getElementById('tab-pickup').style.display === 'block') loadPending();
   }
 
+  /**
+   * 更新下拉選單
+   */
   function updateDropdowns(c) {
     const loc = document.getElementById('inputLocation'), cur = document.getElementById('inputCourier');
     if (!loc || !cur) return;
@@ -369,6 +367,7 @@
     if (oldLoc) loc.value = oldLoc;
     if (oldCur) cur.value = oldCur;
   }
+// ================= 5. 職員管理與輸入邏輯 =================
 
   function checkShiftChange() {
     const now = new Date();
@@ -376,14 +375,11 @@
     const lastUpdate = localStorage.getItem('met1_staff_last_update');
     if (lastUpdate) {
       const lastDate = new Date(parseInt(lastUpdate));
-      const lastHour = lastDate.getHours();
       let currentShift = (currentHour >= 8 && currentHour < 16) ? "AM" : "PM";
-      let lastShift = (lastHour >= 8 && lastHour < 16) ? "AM" : "PM";
+      let lastShift = (lastDate.getHours() >= 8 && lastDate.getHours() < 16) ? "AM" : "PM";
       if (currentShift !== lastShift || now.toDateString() !== lastDate.toDateString()) {
         localStorage.removeItem('met1_staff_name');
-        localStorage.removeItem('met1_staff_last_update');
-        const staffInput = document.getElementById('currentStaff');
-        if (staffInput) staffInput.value = "";
+        if (document.getElementById('currentStaff')) document.getElementById('currentStaff').value = "";
       }
     }
   }
@@ -392,16 +388,20 @@
     const v = e.target.value.toLowerCase().trim(), dd = document.getElementById('unitDropdown'), box = document.getElementById('unitInfoBox');
     dd.innerHTML = '';
     if (v.length < 1) { dd.style.display = 'none'; box.style.display = 'none'; return; }
-    const m = residentData.filter(r => r.unit.includes(v) || r.name.toLowerCase().includes(v)).slice(0, 10);
+    
+    const m = residentData.filter(r => r.unit.includes(v) || r.name.toLowerCase().includes(v) || (r.phone && r.phone.includes(v))).slice(0, 10);
     if (m.length > 0) {
       m.forEach(i => {
         const div = document.createElement('div'); div.className = 'dropdown-item';
-        div.innerHTML = `<b>${i.unit}</b> <small class="text-muted">${i.name}</small>`;
+        const emailWarning = i.hasEmail ? '' : '<span class="no-email-badge">NO EMAIL</span>';
+        const isNoFormK = i.resType.toUpperCase().includes("NO FORM K");
+        div.innerHTML = `<div class="d-flex justify-content-between align-items-center"><b>${i.unit} ${emailWarning}</b><span class="badge ${isNoFormK ? 'bg-secondary' : 'bg-light text-dark border'}" style="font-size: 0.6rem;">${i.resType}</span></div><div class="small text-muted">${i.name}</div>`;
         div.onclick = () => {
           document.getElementById('inputUnit').value = i.unit; dd.style.display = 'none'; box.style.display = 'block';
           window.selectedResident = i;
-          document.getElementById('displayName').innerHTML = `${i.name} (${i.resType})`;
-          apiCall('getUnitStats', { unit: i.unit }).then(res => { document.getElementById('monthlyCount').innerText = `Monthly: ${res.data}`; });
+          document.getElementById('displayName').innerHTML = `${i.name} <small class="text-muted">(${i.resType})</small> ${emailWarning}`;
+          document.getElementById('monthlyCount').innerText = "Wait...";
+          apiCall('getUnitStats', { unit: i.unit }).then(res => { document.getElementById('monthlyCount').innerText = `Monthly Total: ${res.data}`; });
         };
         dd.appendChild(div);
       }); 
@@ -409,18 +409,21 @@
     }
   }
 
+  // ================= 6. 錄入與批量處理 (Receive) =================
+
   function addParcelToList() {
     const u = document.getElementById('inputUnit').value, s = getStaffName(), resident = window.selectedResident;
     if (!u || !s || !resident) return;
     tempBatch.push({ unit: u, residentName: resident.name, resType: resident.resType, location: document.getElementById('inputLocation').value, courier: document.getElementById('inputCourier').value, staffName: s });
     renderBatchList();
     document.getElementById('inputUnit').value = ""; document.getElementById('unitInfoBox').style.display = 'none';
+    window.selectedResident = null;
   }
 
   function renderBatchList() {
     const c = document.getElementById('batchContainer'); c.innerHTML = "";
     tempBatch.forEach((i, idx) => {
-      c.innerHTML += `<div class="batch-item"><div><b>${i.unit}</b> - ${i.residentName}<br><small>${i.courier} | ${i.location}</small></div><button class="btn btn-sm btn-outline-danger" onclick="tempBatch.splice(${idx},1);renderBatchList();">✕</button></div>`;
+      c.innerHTML += `<div class="batch-item"><div><b>${i.unit}</b> - ${i.residentName} <small class="text-secondary">(${i.resType})</small><br><small class="text-muted">🚚 ${i.courier} | 📍 <b>${i.location}</b></small></div><button class="btn btn-sm btn-outline-danger" onclick="tempBatch.splice(${idx},1);renderBatchList();">✕</button></div>`;
     });
     document.getElementById('batchCount').innerText = tempBatch.length;
     document.getElementById('btnFinalSubmit').style.display = tempBatch.length > 0 ? "block" : "none";
@@ -429,17 +432,20 @@
   function clearBatch() { tempBatch = []; renderBatchList(); }
 
   function showVerifyModal() {
+    if (tempBatch.length === 0) return;
     document.getElementById('verifyTableBody').innerHTML = tempBatch.map(i => `<tr><td class="ps-3"><b>${i.unit}</b></td><td>${i.residentName}</td><td>${i.courier}</td></tr>`).join('');
     bootstrap.Modal.getOrCreateInstance(document.getElementById('verifyModal')).show();
   }
 
   function finalizeBatchReceive() {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('verifyModal')).hide();
-    Swal.fire({ title: 'Sending...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Sending...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     apiCall('receiveBatch', tempBatch, 'POST').then(r => {
-      Swal.fire("Success!", `Saved ${r.count} parcels`, "success"); clearBatch();
+      Swal.fire("Success!", `Processed ${r.count} parcels.`, "success"); clearBatch();
     }).catch(e => Swal.fire("Error", e.message, "error"));
   }
+
+  // ================= 7. 領取、搜尋與歷史 (Pickup / History) =================
 
   function loadPending() {
     document.getElementById('parcelListArea').innerHTML = '<div class="text-center py-5 text-muted small">Loading...</div>';
@@ -452,14 +458,15 @@
     a.innerHTML = d.length === 0 ? '<div class="text-center py-5">Empty 🎉</div>' : '';
     d.forEach(p => {
       const isSelected = selectedIds.has(p.id);
-      a.innerHTML += `<div class="parcel-card d-flex align-items-center ${isSelected?'selected':''}" onclick="toggleSelect('${p.id}')"><div class="custom-check"></div><div class="flex-grow-1"><div class="d-flex justify-content-between"><b>${p.unit}</b><span class="badge ${getLocationColorClass(p.location)}">${p.location}</span></div><div class="small">${p.name} | ${p.courier}</div><div class="text-muted" style="font-size:0.7rem">${p.time}</div></div></div>`;
+      const colorClass = getLocationColorClass(p.location);
+      a.innerHTML += `<div class="parcel-card d-flex align-items-center ${isSelected?'selected':''}" onclick="toggleSelect('${p.id}')"><div class="custom-check"></div><div class="flex-grow-1"><div class="d-flex justify-content-between"><b>${p.unit}</b><span class="badge ${colorClass} shadow-sm">${p.location}</span></div><div class="small">${p.name} | ${p.courier}</div><div class="text-muted" style="font-size:0.7rem">${p.time}</div></div></div>`;
     });
     if (selectedIds.size > 0) a.innerHTML += `<button class="btn btn-primary position-fixed shadow-lg py-3 fw-bold" style="bottom:80px; left:20px; right:20px; z-index:999" onclick="openSignModal()">Confirm Pickup (${selectedIds.size})</button>`;
   }
 
   function toggleSelect(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); filterParcels(); }
   function filterParcels() { const v = document.getElementById('searchBox').value.toLowerCase().trim(); renderPickupList(allParcels.filter(p => p.unit.includes(v) || p.name.toLowerCase().includes(v))); }
-  function getLocationColorClass(loc) { if (!loc) return 'bg-loc-default'; const l = loc.toLowerCase(); if (l.includes('lobby')) return 'bg-loc-lobby'; if (l.includes('shelf')) return 'bg-loc-shelf'; if (l.includes('bag')) return 'bg-loc-bag'; return 'bg-loc-default'; }
+  function getLocationColorClass(loc) { if (!loc) return 'bg-loc-default'; const l = loc.toLowerCase(); if (l.includes('lobby')) return 'bg-loc-lobby'; if (l.includes('shelf')) return 'bg-loc-shelf'; if (l.includes('bag')) return 'bg-loc-bag'; if (l.includes('floor')) return 'bg-loc-floor'; return 'bg-loc-default'; }
 
   function openSignModal() { if (!getStaffName()) return; document.getElementById('bypassSign').checked = false; bootstrap.Modal.getOrCreateInstance(document.getElementById('signModal')).show(); }
 
@@ -475,7 +482,7 @@
   function submitPayment() {
     const s = getStaffName(); if (!s) return;
     const f = { unit: document.getElementById('payUnit').value, forMonth: document.getElementById('payMonth').value, amount: document.getElementById('payAmount').value, receipt: document.getElementById('payReceipt').value, paidBy: document.getElementById('payBy').value, staffName: s };
-    if (!f.unit || !f.amount) return Swal.fire("Error", "Fill Data", "error");
+    if (!f.unit || !f.amount) return Swal.fire("Error", "Fill all data", "error");
     apiCall('logPayment', f, 'POST').then(() => { Swal.fire("Saved", "", "success"); document.getElementById('payUnit').value=''; });
   }
 
@@ -483,33 +490,69 @@
     const v = document.getElementById('historySearch').value;
     apiCall('getArchived', { search: v }).then(res => {
       const a = document.getElementById('historyListArea'); a.innerHTML = res.data.length === 0 ? '<div class="text-center py-5">No records</div>' : '';
-      res.data.forEach(p => { a.innerHTML += `<div class="parcel-card d-flex justify-content-between align-items-center"><div><b>${p.unit}</b> - ${p.name}<br><small>${p.courier} | Out: ${p.timeOut}</small></div><button class="btn btn-sm btn-outline-danger" onclick="confirmRestore('${p.id}','${p.unit}')">Restore</button></div>`; });
+      res.data.forEach(p => { a.innerHTML += `<div class="parcel-card d-flex justify-content-between align-items-start"><div><b>${p.unit}</b> - ${p.name}<br><small class="text-muted">${p.courier} | Out: ${p.timeOut}</small></div><button class="btn btn-sm btn-outline-danger" onclick="confirmRestore('${p.id}', '${p.unit}')">Restore ↩️</button></div>`; });
     });
   }
 
   function confirmRestore(id, u) {
     if (!getStaffName()) return;
-    Swal.fire({ title: 'Restore?', text: `Unit ${u}`, showCancelButton: true }).then(r => { if (r.isConfirmed) apiCall('restoreParcel', { parcelId: id }, 'POST').then(() => searchHistory()); });
+    Swal.fire({ title: 'Restore?', text: `Unit: ${u}`, showCancelButton: true }).then(r => { if (r.isConfirmed) apiCall('restoreParcel', { parcelId: id }, 'POST').then(() => searchHistory()); });
   }
 
+  // ================= 8. 隱藏工具核心：貨架分佈渲染 (還原 GAS 版佈局) =================
+
   function refreshStorageVisual() {
-    const area = document.getElementById('visualStorageArea'); area.innerHTML = 'Loading...';
+    const area = document.getElementById('visualStorageArea');
+    area.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm"></div> Loading...</div>';
+
     apiCall('getPending').then(res => {
-      area.innerHTML = "";
-      ["Shelf", "Floor", "Bag", "Letter"].forEach(loc => {
-        const list = res.data.filter(p => p.location.toLowerCase().includes(loc.toLowerCase()));
-        if (list.length > 0) area.innerHTML += `<div class="location-header">${loc.toUpperCase()}</div><div class="unit-container">${list.map(p => `<span class="unit-tag">${p.unit}</span>`).join('')}</div>`;
+      const parcels = res.data;
+      if (!parcels || parcels.length === 0) { area.innerHTML = '<p class="text-muted text-center py-4">No parcels in storage. 🎉</p>'; return; }
+
+      const locations = ["Shelf", "Floor", "Bag", "Letter"];
+      const ranges = [
+        { name: "3001 or above", filter: (n) => !isNaN(n) && n >= 3001 },
+        { name: "2001 ~ 2910", filter: (n) => !isNaN(n) && n >= 2001 && n <= 2910 },
+        { name: "1001 ~ 1910", filter: (n) => !isNaN(n) && n >= 1001 && n <= 1910 },
+        { name: "301 ~ 910", filter: (n) => !isNaN(n) && n >= 301 && n <= 910 },
+        { name: "Townhouse / Others", filter: (n, raw) => isNaN(n) || raw.toUpperCase().includes('TH') }
+      ];
+
+      let html = "";
+      locations.forEach(loc => {
+        const locParcels = parcels.filter(p => p.location.toLowerCase().includes(loc.toLowerCase()));
+        if (locParcels.length > 0) {
+          html += `<div class="location-header">${loc.toUpperCase()} (Total: ${locParcels.length})</div>`;
+          ranges.forEach(range => {
+            let matchedUnits = locParcels.filter(p => {
+              const unitRaw = String(p.unit).trim();
+              const unitNum = parseInt(unitRaw.replace(/[^0-9]/g, ''));
+              return range.filter(unitNum, unitRaw);
+            });
+            // 按數字排序
+            matchedUnits.sort((a, b) => (parseInt(String(a.unit).replace(/[^0-9]/g, '')) || 999) - (parseInt(String(b.unit).replace(/[^0-9]/g, '')) || 999));
+
+            if (matchedUnits.length > 0) {
+              html += `<div class="storage-row"><div class="range-label">${range.name}</div><div class="unit-container">${matchedUnits.map(p => `<span class="unit-tag" onclick="this.style.background='#d4edda';">${p.unit}</span>`).join('')}</div></div>`;
+            }
+          });
+        }
       });
+      area.innerHTML = html || '<p class="text-center py-4">No categorized data.</p>';
     });
   }
 
   function runUnitInquiry() {
     const u = document.getElementById('queryUnitInput').value; if (!u) return;
+    const resDiv = document.getElementById('unitInquiryResult'); resDiv.innerHTML = "Searching...";
     apiCall('getUnitDetailedHistory', { unit: u }).then(res => {
       const d = res.data;
-      document.getElementById('unitInquiryResult').innerHTML = `<div class="alert ${d.balance > 0 ? 'alert-danger' : 'alert-success'} small"><b>Balance: $${d.balance}</b><br>Fee: $${d.totalFeeOwed} | Paid: $${d.totalPaid}</div>`;
+      let mthHtml = Object.keys(d.monthlyStats).sort().reverse().map(m => `<tr><td>${m}</td><td class="${d.monthlyStats[m]>12?'text-danger fw-bold':''}">${d.monthlyStats[m]}</td></tr>`).join('');
+      resDiv.innerHTML = `<div class="alert ${d.balance>0?'alert-danger':'alert-success'} mb-3"><b>Balance: $${d.balance}</b><br><small>Total Fee: $${d.totalFeeOwed} | Paid: $${d.totalPaid}</small></div><table class="table table-sm small"><thead><tr><th>Month</th><th>Count</th></tr></thead><tbody>${mthHtml || '<tr><td colspan="2">No records</td></tr>'}</tbody></table>`;
     });
   }
+
+  // ================= 9. UI 輔助函數 =================
 
   function switchTab(t) {
     ['receive', 'pickup', 'payment', 'history'].forEach(x => {
@@ -520,12 +563,10 @@
     if (t === 'history') searchHistory();
   }
 
-  function getStaffName() { const n = document.getElementById('currentStaff').value.trim(); if (!n) Swal.fire("Staff Name Required", "", "warning"); return n; }
+  function getStaffName() { const n = document.getElementById('currentStaff').value.trim(); if (!n) Swal.fire("Identification Required", "Enter Staff Name", "warning"); return n; }
   function resizeCanvas() { const c = document.getElementById('signature-pad'); const r = window.devicePixelRatio || 1; c.width = c.offsetWidth * r; c.height = c.offsetHeight * r; c.getContext("2d").scale(r, r); signaturePad.clear(); }
   function toggleOverlay(s) { document.getElementById('toolOverlay').style.display = s ? 'block' : 'none'; if (s) refreshStorageVisual(); }
 
 </script>
 </body>
 </html>
-
-
