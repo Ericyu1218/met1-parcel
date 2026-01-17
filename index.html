@@ -532,7 +532,128 @@ function getStaffName() {
   if (!n) { Swal.fire("Identification Required", "Enter Staff Name", "warning"); return null; }
   return n;
 }
+  /**
+ * 1. 自動清理職員名稱邏輯 (修正 checkShiftChange 報錯)
+ */
+function checkShiftChange() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const lastUpdate = localStorage.getItem('met1_staff_last_update');
+  
+  if (lastUpdate) {
+    const lastDate = new Date(parseInt(lastUpdate));
+    const lastHour = lastDate.getHours();
+    
+    // 定義更換班次時間 (8:00 AM 和 4:00 PM)
+    let currentShift = (currentHour >= 8 && currentHour < 16) ? "AM" : "PM";
+    let lastShift = (lastHour >= 8 && lastHour < 16) ? "AM" : "PM";
+    const isDifferentDay = now.toDateString() !== lastDate.toDateString();
+    
+    // 如果跨天或跨班次，則自動清空名稱
+    if (currentShift !== lastShift || isDifferentDay) {
+      localStorage.removeItem('met1_staff_name');
+      localStorage.removeItem('met1_staff_last_update');
+      const staffInput = document.getElementById('currentStaff');
+      if (staffInput) staffInput.value = "";
+    }
+  }
+}
+
+/**
+ * 2. 修正 loadPending 並補回 renderPickupList (修正渲染報錯)
+ */
+function loadPending() {
+  document.getElementById('parcelListArea').innerHTML = '<div class="text-center py-5 text-muted small">Loading...</div>';
+  selectedIds.clear();
+  // 🚀 注意：這裡一定要指向 res.data，因為 API 回傳的是 {status: "success", data: [...]}
+  apiCall('getPending').then(res => { 
+    allParcels = res.data; 
+    renderPickupList(res.data); 
+  }).catch(e => console.error("Load Pending Error:", e));
+}
+
+function renderPickupList(d) {
+  const a = document.getElementById('parcelListArea'); 
+  a.innerHTML = d.length === 0 ? '<div class="text-center py-5">Empty 🎉</div>' : '';
+  
+  d.forEach(p => {
+    const isSelected = selectedIds.has(p.id);
+    const colorClass = getLocationColorClass(p.location);
+    // 從快取中比對住戶類型
+    const res = residentData.find(r => r.unit === p.unit && r.name === p.name);
+    const typeLabel = res ? `<span class="text-muted" style="font-size: 0.7rem;">[${res.resType}]</span>` : "";
+    const emailWarning = (res && !res.hasEmail) ? '<span class="no-email-badge">NO EMAIL</span>' : '';
+
+    a.innerHTML += `
+      <div class="parcel-card d-flex align-items-center ${isSelected?'selected':''}" onclick="toggleSelect('${p.id}')">
+        <div class="custom-check"></div>
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <b>${p.unit} ${typeLabel}</b> ${emailWarning}
+            </div>
+            <span class="badge ${colorClass} shadow-sm">${p.location}</span>
+          </div>
+          <div class="small">${p.name} | ${p.courier}</div>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <div class="text-muted" style="font-size:0.7rem">${p.time}</div>
+            <button class="btn btn-sm btn-link py-0 text-decoration-none" onclick="event.stopPropagation(); openEditLocationModal('${p.id}', '${p.location}')">✏️ Edit Loc</button>
+          </div>
+        </div>
+      </div>`;
+  });
+  
+  if (selectedIds.size > 0) {
+    a.innerHTML += `<button class="btn btn-primary position-fixed shadow-lg py-3 fw-bold" style="bottom:80px; left:20px; right:20px; z-index:999" onclick="openSignModal()">Confirm Pickup (${selectedIds.size})</button>`;
+  }
+}
+
+/**
+ * 3. 補回位置標籤顏色判斷
+ */
+function getLocationColorClass(loc) {
+  if (!loc) return 'bg-loc-default';
+  const l = loc.toLowerCase();
+  if (l.includes('lobby')) return 'bg-loc-lobby';
+  if (l.includes('shelf')) return 'bg-loc-shelf';
+  if (l.includes('bag'))   return 'bg-loc-bag';
+  if (l.includes('floor')) return 'bg-loc-floor';
+  return 'bg-loc-default';
+}
+
+/**
+ * 4. 補回搜尋過濾與選擇邏輯
+ */
+function filterParcels() {
+  const v = document.getElementById('searchBox').value.toLowerCase().trim();
+  renderPickupList(allParcels.filter(p => p.unit.includes(v) || p.name.toLowerCase().includes(v)));
+}
+
+function toggleSelect(id) { 
+  if (selectedIds.has(id)) selectedIds.delete(id); 
+  else selectedIds.add(id); 
+  filterParcels(); 
+}
+
+/**
+ * 5. 補回修改位置功能
+ */
+function openEditLocationModal(id, currentLoc) {
+  Swal.fire({
+    title: 'Edit Location',
+    input: 'select',
+    inputOptions: config.locations.reduce((acc, loc) => { acc[loc] = loc; return acc; }, {}),
+    inputValue: currentLoc,
+    showCancelButton: true,
+    confirmButtonText: 'Update'
+  }).then((r) => { 
+    if (r.isConfirmed) {
+      apiCall('updateParcelLocation', { id: id, newLocation: r.value }, 'POST').then(() => refreshAllData()); 
+    }
+  });
+}
 
 </script>
 </body>
 </html>
+
