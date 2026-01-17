@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>MET 1 Parcel System (GitHub Ver.)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --met-red: #D00000; --met-black: #000000; }
+    body { background-color: #f8f9fa; padding-bottom: 100px; font-family: sans-serif; }
+    .app-header { background-color: var(--met-black); color: white; padding: 10px 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .no-email-badge { background-color: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; font-weight: bold; margin-left: 5px; }
+    .app-logo { height: 30px; margin-right: 10px; }
+    .staff-bar { background: white; padding: 8px 15px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+    .staff-input { border: 1px solid #ccc; border-radius: 5px; padding: 4px 8px; flex-grow: 1; font-weight: bold; }
+    .batch-item { background: white; border-left: 5px solid var(--met-red); margin-bottom: 8px; padding: 10px; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .unit-info-box { font-size: 0.9rem; margin-top: 5px; padding: 5px 10px; border-radius: 5px; background: #e7f3ff; color: #0056b3; }
+    .monthly-badge { background: #ffeded; color: #d00000; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .nav-bottom { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; height: 65px; display: flex; z-index: 1000; }
+    .nav-btn { flex: 1; border: none; background: none; color: #6c757d; font-size: 0.7rem; padding-top: 10px; }
+    .nav-btn.active { color: var(--met-red); font-weight: bold; }
+    .parcel-card { background: white; border-radius: 8px; margin-bottom: 10px; padding: 12px; border: 2px solid transparent; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .parcel-card.selected { border-color: var(--met-red); background-color: #fff5f5; }
+    .custom-check { width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
+    .selected .custom-check { background: var(--met-red); border-color: var(--met-red); color: white; display: flex; align-items: center; justify-content: center; }
+    .selected .custom-check::after { content: '✓'; font-size: 14px; }
+    #signature-pad { border: 2px dashed #ccc; background: #fff; width: 100%; height: 200px; touch-action: none; }
+    .custom-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; background: white; border: 1px solid #ddd; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .dropdown-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .bg-loc-lobby { background-color: #ffc107 !important; color: #000 !important; }
+    .bg-loc-shelf { background-color: #0d6efd !important; color: #fff !important; }
+    .bg-loc-bag   { background-color: #198754 !important; color: #fff !important; }
+    .bg-loc-floor { background-color: #6c757d !important; color: #fff !important; }
+    .bg-loc-default { background-color: #f8f9fa !important; color: #333 !important; border: 1px solid #ddd; }
+    #toolOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: none; overflow-y: auto; }
+    .overlay-header { background: #333; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .storage-row { display: flex; border-bottom: 1px solid #eee; padding: 8px 0; align-items: center; }
+    .range-label { width: 120px; font-weight: bold; font-size: 0.8rem; color: #666; flex-shrink: 0; }
+    .unit-container { display: flex; flex-wrap: wrap; gap: 5px; }
+    .unit-tag { background: #f8f9fa; border: 1px solid #ddd; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+    .location-header { background: #f0f0f0; padding: 5px 10px; font-weight: bold; border-left: 4px solid #333; margin-top: 15px; }
+    .menu-trigger { cursor: pointer; padding: 5px; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<script>
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxNeslLDmf6SHD_N00IT8tmoBMa0zRiKWfXAuhhLUV_ZRD4c8PUdIScrHaRudDbNdRkKg/exec"; // 👈 重要：填寫你的部署連結
+  const APP_PIN_KEY = "met1_app_pin";
+</script>
+
+<div id="toolOverlay">
+  <div class="overlay-header">
+    <h5 class="mb-0">Extra Tools | 隱藏工具</h5>
+    <button class="btn btn-sm btn-outline-light" onclick="toggleOverlay(false)">Close ✕</button>
+  </div>
+  <div class="container py-3">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-primary text-white d-flex justify-content-between">
+        <b>📦 Storage Visualizer (貨架分佈)</b>
+        <button class="btn btn-xs btn-light" onclick="refreshStorageVisual()">Refresh</button>
+      </div>
+      <div class="card-body" id="visualStorageArea"><p class="text-muted text-center">Loading...</p></div>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white"><b>🔍 Unit Inquiry (單位往績)</b></div>
+      <div class="card-body">
+        <div class="input-group mb-3">
+          <input type="text" id="queryUnitInput" class="form-control" placeholder="Unit #">
+          <button class="btn btn-dark" onclick="runUnitInquiry()">Search</button>
+        </div>
+        <div id="unitInquiryResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-header justify-content-between">
+  <div class="d-flex align-items-center">
+    <img src="https://drive.google.com/thumbnail?sz=w100&id=1jo8quID7GZ8EF9OeRJ3GsbaLDEJFg7ss" class="app-logo">
+    <div style="line-height:1.1"><small>MET 1</small><br><b>PARCEL SYSTEM</b></div>
+  </div>
+  <div class="menu-trigger" onclick="toggleOverlay(true)">☰</div>
+</div>
+
+<div class="staff-bar">
+  <label class="small fw-bold text-muted">👤 Staff:</label>
+  <input type="text" id="currentStaff" class="staff-input" placeholder="Name">
+</div>
+
+<div id="tab-receive" class="container py-3">
+  <div class="card p-3 shadow-sm mb-3">
+    <div class="position-relative mb-2">
+      <label class="small fw-bold text-muted">UNIT / NAME</label>
+      <input type="text" id="inputUnit" class="form-control form-control-lg" placeholder="Type to search..." autocomplete="off">
+      <div id="unitDropdown" class="custom-dropdown"></div>
+    </div>
+    <div id="unitInfoBox" class="unit-info-box" style="display:none;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span id="displayName">---</span>
+        <span id="monthlyCount" class="monthly-badge">...</span>
+      </div>
+    </div>
+    <div class="row g-2 mt-2">
+      <div class="col-6"><select id="inputCourier" class="form-select"></select></div>
+      <div class="col-6"><select id="inputLocation" class="form-select"></select></div>
+    </div>
+    <button class="btn btn-danger w-100 mt-3 py-2 fw-bold" onclick="addParcelToList()">＋ Add to List</button>
+  </div>
+  <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+    <span class="fw-bold">Pending (<span id="batchCount">0</span>)</span>
+    <button class="btn btn-sm text-muted" onclick="clearBatch()">Clear</button>
+  </div>
+  <div id="batchContainer"></div>
+  <button id="btnFinalSubmit" class="btn btn-dark w-100 mt-3 py-3 fw-bold" style="display:none;" onclick="showVerifyModal()">Verify & Send</button>
+</div>
+
+<div id="tab-pickup" class="container py-3" style="display:none;">
+  <div class="input-group mb-3 shadow-sm">
+    <input type="text" class="form-control" id="searchBox" placeholder="Search Unit / Name..." onkeyup="filterParcels()">
+  </div>
+  <div id="parcelListArea"></div>
+</div>
+
+<div id="tab-payment" class="container py-3" style="display:none;">
+  <div class="card p-3 shadow-sm">
+    <h6>💰 Log Payment</h6>
+    <input type="text" id="payUnit" class="form-control mb-2" placeholder="Unit #">
+    <div class="row g-2 mb-2">
+      <div class="col-6"><input type="month" id="payMonth" class="form-control"></div>
+      <div class="col-6"><input type="number" id="payAmount" class="form-control" placeholder="Amount"></div>
+    </div>
+    <div class="d-flex gap-2 mb-2">
+      <input type="text" id="payReceipt" class="form-control" placeholder="Receipt#">
+      <input type="text" id="payBy" class="form-control" placeholder="Name">
+    </div>
+    <button class="btn btn-success w-100 py-3" onclick="submitPayment()">Save Payment</button>
+  </div>
+</div>
+
+<div id="tab-history" class="container py-3" style="display:none;">
+  <input type="text" class="form-control mb-3" id="historySearch" placeholder="Search History..." onkeyup="searchHistory()">
+  <div id="historyListArea"></div>
+</div>
+
+<div class="nav-bottom">
+  <button class="nav-btn active" id="btn-nav-receive" onclick="switchTab('receive')"><div>📦</div>Receive</button>
+  <button class="nav-btn" id="btn-nav-pickup" onclick="switchTab('pickup')"><div>📤</div>Pickup</button>
+  <button class="nav-btn" id="btn-nav-payment" onclick="switchTab('payment')"><div>💰</div>Pay</button>
+  <button class="nav-btn" id="btn-nav-history" onclick="switchTab('history')"><div>📜</div>History</button>
+</div>
+
+<div class="modal fade" id="verifyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-dark text-white"><h5>Final Check</h5></div><div class="modal-body p-0"><table class="table table-striped small"><thead><tr><th>Unit</th><th>Resident</th></tr></thead><tbody id="verifyTableBody"></tbody></table></div><div class="modal-footer"><button class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Edit</button><button class="btn btn-danger flex-grow-1" onclick="finalizeBatchReceive()">Confirm ✅</button></div></div></div></div>
+<div class="modal fade" id="signModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5>Signature</h5></div><div class="modal-body"><canvas id="signature-pad"></canvas><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="bypassSign"><label class="form-check-label text-danger" for="bypassSign">Skip Signature</label></div></div><div class="modal-footer"><button class="btn btn-primary w-100 py-3 fw-bold" onclick="processPickup()">Confirm Pickup</button></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  let residentData = [], tempBatch = [], allParcels = [], selectedIds = new Set(), signaturePad = null;
+  let config = { locations: [], couriers: [] };
+
+  // --- 核心 API 通訊函數 (Fetch 代替 google.script.run) ---
+  async function apiCall(action, params = {}, method = 'GET') {
+    const pin = localStorage.getItem(APP_PIN_KEY);
+    if (!pin && action !== 'verifyPin') { checkAppPin(); return Promise.reject("Missing PIN"); }
+    
+    let url = `${WEB_APP_URL}?action=${action}&pin=${pin}`;
+    // 如果是 GET 請求，將 params 轉為 Query String
+    if (method === 'GET' && Object.keys(params).length > 0) {
+      for (let key in params) url += `&${key}=${encodeURIComponent(params[key])}`;
+    }
+
+    const options = { method: method, mode: 'cors' };
+    if (method === 'POST') options.body = JSON.stringify(params);
+
+    try {
+      const response = await fetch(url, options);
+      const data = await response.json();
+      if (data.status === "error") throw new Error(data.message);
+      return data;
+    } catch (err) {
+      if (err.message.includes("PIN")) { localStorage.removeItem(APP_PIN_KEY); checkAppPin(); }
+      throw err;
+    }
+  }
+
+  // --- 初始化與同步邏輯 ---
+  window.onload = function() {
+    checkAppPin();
+    restoreFromCache();
+    checkShiftChange();
+    setInterval(checkShiftChange, 60000);
+
+    const savedStaff = localStorage.getItem('met1_staff_name');
+    if (savedStaff) document.getElementById('currentStaff').value = savedStaff;
+    document.getElementById('currentStaff').oninput = (e) => {
+      localStorage.setItem('met1_staff_name', e.target.value);
+      localStorage.setItem('met1_staff_last_update', new Date().getTime());
+    };
+
+    const canvas = document.getElementById('signature-pad');
+    if (canvas) signaturePad = new SignaturePad(canvas, { backgroundColor: 'white' });
+    document.getElementById('signModal').addEventListener('shown.bs.modal', resizeCanvas);
+
+    // 視窗可見性監聽 (後台同步關鍵)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshAllData();
+    });
+
+    refreshAllData();
+
+    document.getElementById('inputUnit').addEventListener('input', handleUnitInput);
+    document.addEventListener('click', e => { if (!e.target.closest('#inputUnit')) document.getElementById('unitDropdown').style.display = 'none'; });
+  };
+
+  function checkAppPin() {
+    if (!localStorage.getItem(APP_PIN_KEY)) {
+      Swal.fire({
+        title: 'System Access', text: 'Enter PIN:', input: 'password', allowOutsideClick: false,
+        preConfirm: (v) => v || Swal.showValidationMessage('Required')
+      }).then(r => { if (r.isConfirmed) { localStorage.setItem(APP_PIN_KEY, r.value); refreshAllData(); } });
+    }
+  }
+
+  function restoreFromCache() {
+    const r = localStorage.getItem('cache_residents'), c = localStorage.getItem('cache_config');
+    if (r) residentData = JSON.parse(r);
+    if (c) { config = JSON.parse(c); updateDropdowns(config); }
+  }
+
+  function refreshAllData() {
+    apiCall('getResidents').then(res => {
+      residentData = res.data;
+      localStorage.setItem('cache_residents', JSON.stringify(res.data));
+    });
+    apiCall('getConfig').then(res => {
+      config = res.data;
+      localStorage.setItem('cache_config', JSON.stringify(res.data));
+      updateDropdowns(res.data);
+    });
+    if (document.getElementById('tab-pickup').style.display === 'block') loadPending();
+  }
+
+  function updateDropdowns(c) {
+    const loc = document.getElementById('inputLocation'), cur = document.getElementById('inputCourier');
+    if (!loc || !cur) return;
+    loc.innerHTML = ""; cur.innerHTML = "";
+    c.locations.forEach(l => loc.add(new Option(l, l)));
+    c.couriers.forEach(r => cur.add(new Option(r, r)));
+  }
+
+  // --- 業務邏輯 (將原本的 google.script.run 改為 apiCall) ---
+  function addParcelToList() {
+    const u = document.getElementById('inputUnit').value, s = getStaffName();
+    const resident = window.selectedResident;
+    if (!u || !s || !resident) return;
+    tempBatch.push({ unit: u, residentName: resident.name, resType: resident.resType, location: document.getElementById('inputLocation').value, courier: document.getElementById('inputCourier').value, staffName: s });
+    renderBatchList();
+    document.getElementById('inputUnit').value = ""; document.getElementById('unitInfoBox').style.display = 'none';
+  }
+
+  function finalizeBatchReceive() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('verifyModal')).hide();
+    Swal.fire({ title: 'Sending...', didOpen: () => Swal.showLoading() });
+    apiCall('receiveBatch', tempBatch, 'POST').then(r => {
+      Swal.fire("Success!", `Saved ${r.count} parcels`, "success"); clearBatch();
+    }).catch(e => Swal.fire("Error", e.message, "error"));
+  }
+
+  function loadPending() {
+    apiCall('getPending').then(res => { allParcels = res; renderPickupList(res); });
+  }
+
+  function processPickup() {
+    const b = document.getElementById('bypassSign').checked;
+    if (!b && signaturePad.isEmpty()) return Swal.fire("Signature Required", "", "warning");
+    const sign = b ? "" : signaturePad.toDataURL().split(',')[1];
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('signModal')).hide();
+    Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+    apiCall('pickupParcels', { ids: Array.from(selectedIds), signBase64: sign, bypass: b, staffName: getStaffName() }, 'POST')
+      .then(() => { Swal.fire("Success", "", "success"); loadPending(); });
+  }
+
+  function submitPayment() {
+    const f = { unit: document.getElementById('payUnit').value, forMonth: document.getElementById('payMonth').value, amount: document.getElementById('payAmount').value, receipt: document.getElementById('payReceipt').value, paidBy: document.getElementById('payBy').value, staffName: getStaffName() };
+    if (!f.unit || !f.amount || !f.staffName) return;
+    apiCall('logPayment', f, 'POST').then(() => { Swal.fire("Saved", "", "success"); document.getElementById('payUnit').value=''; });
+  }
+
+/**
+ * 處理住戶輸入搜尋 (Handle Unit Input)
+ */
+function handleUnitInput(e) {
+  const v = e.target.value.toLowerCase().trim();
+  const dd = document.getElementById('unitDropdown');
+  const box = document.getElementById('unitInfoBox');
+  dd.innerHTML = '';
+  
+  if (v.length < 1) { 
+    dd.style.display = 'none'; 
+    box.style.display = 'none'; 
+    return; 
+  }
+  
+  // 使用快取中的 residentData 進行前端篩選 (不需 API)
+  const m = residentData.filter(r => 
+    r.unit.includes(v) || 
+    r.name.toLowerCase().includes(v) || 
+    (r.phone && r.phone.includes(v))
+  ).slice(0, 10);
+  
+  if (m.length > 0) {
+    m.forEach(i => {
+      const div = document.createElement('div');
+      div.className = 'dropdown-item';
+      const emailWarning = i.hasEmail ? '' : '<span class="no-email-badge">NO EMAIL</span>';
+      const isNoFormK = i.resType.toUpperCase().includes("NO FORM K");
+      const typeBadgeClass = isNoFormK ? "bg-secondary text-white" : "bg-light text-dark border";
+
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+          <b>${i.unit} ${emailWarning}</b>
+          <span class="badge ${typeBadgeClass}" style="font-size: 0.6rem;">${i.resType}</span>
+        </div>
+        <div class="small text-muted">${i.name} <small class="text-danger">${i.phone || ''}</small></div>`;
+      
+      div.onclick = () => {
+        document.getElementById('inputUnit').value = i.unit; 
+        dd.style.display = 'none'; 
+        box.style.display = 'block';
+        window.selectedResident = i; 
+        document.getElementById('displayName').innerHTML = `${i.name} <small class="text-muted">(${i.resType})</small> ${emailWarning}`;
+        document.getElementById('monthlyCount').innerText = "Wait...";
+        
+        // 🚀 API Call: 獲取該單位當月統計
+        apiCall('getUnitStats', { unit: i.unit }).then(c => {
+          document.getElementById('monthlyCount').innerText = `Monthly Total: ${c.data}`;
+        });
+      };
+      dd.appendChild(div);
+    }); 
+    dd.style.display = 'block';
+  }
+}
+
+/**
+ * 渲染批量錄入列表
+ */
+function renderBatchList() {
+  const c = document.getElementById('batchContainer'); 
+  c.innerHTML = "";
+  tempBatch.forEach((i, idx) => {
+    c.innerHTML += `
+      <div class="batch-item">
+        <div><b>${i.unit}</b> - ${i.residentName} <small class="text-secondary">(${i.resType})</small><br>
+        <small class="text-muted">🚚 ${i.courier} | 📍 <b>${i.location}</b></small></div>
+        <button class="btn btn-sm btn-outline-danger" onclick="tempBatch.splice(${idx},1);renderBatchList();">✕</button>
+      </div>`;
+  });
+  document.getElementById('batchCount').innerText = tempBatch.length;
+  document.getElementById('btnFinalSubmit').style.display = tempBatch.length > 0 ? "block" : "none";
+}
+
+function clearBatch() { tempBatch = []; renderBatchList(); }
+
+
+/**
+ * 分頁切換 (Switch Tab)
+ */
+function switchTab(t) {
+  ['receive', 'pickup', 'payment', 'history'].forEach(x => {
+    document.getElementById(`tab-${x}`).style.display = (x === t ? 'block' : 'none');
+    document.getElementById(`btn-nav-${x}`).classList.toggle('active', x === t);
+  });
+  if (t === 'pickup') loadPending();
+  if (t === 'history') { 
+    document.getElementById('historySearch').value = ''; 
+    searchHistory(); 
+  }
+}
+
+/**
+ * 搜尋歷史紀錄 (Search History)
+ */
+function searchHistory() {
+  const v = document.getElementById('historySearch').value;
+  document.getElementById('historyListArea').innerHTML = '<div class="text-center py-3 small">Searching...</div>';
+  
+  // 🚀 API Call: 獲取存檔包裹
+  apiCall('getArchived', { search: v }).then(res => {
+    const d = res.data;
+    const a = document.getElementById('historyListArea'); 
+    a.innerHTML = (!d || d.length === 0) ? '<div class="text-center py-5">No records</div>' : '';
+    if(d) d.forEach(p => {
+      a.innerHTML += `
+        <div class="parcel-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div><b>${p.unit}</b> - ${p.name}<br>
+            <small class="text-muted">${p.courier} | Out: ${p.timeOut}</small></div>
+            <button class="btn btn-sm btn-outline-danger" onclick="confirmRestore('${p.id}', '${p.unit}')">Restore ↩️</button>
+          </div>
+        </div>`;
+    });
+  });
+}
+
+/**
+ * 恢復已領取包裹 (Restore)
+ */
+function confirmRestore(id, u) {
+  const staff = getStaffName();
+  if (!staff) return;
+  Swal.fire({ title: 'Restore Parcel?', text: `Unit: ${u}`, icon: 'question', showCancelButton: true }).then(r => {
+    if (r.isConfirmed) {
+      // 🚀 API Call: 執行恢復動作
+      apiCall('restoreParcel', { parcelId: id }, 'POST').then(res => {
+        if(res.success) { Swal.fire("Restored", "", "success"); searchHistory(); }
+      });
+    }
+  });
+}
+
+/**
+ * 貨架分佈圖視覺化 (Storage Visualizer)
+ */
+function refreshStorageVisual() {
+  const area = document.getElementById('visualStorageArea');
+  area.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div> Loading...</div>';
+
+  apiCall('getPending').then(res => {
+    const parcels = res.data;
+    if (!parcels || parcels.length === 0) {
+      area.innerHTML = '<p class="text-muted text-center py-3">No parcels in storage. 🎉</p>';
+      return;
+    }
+
+    const locations = ["Shelf", "Floor", "Bag", "Letter"];
+    const ranges = [
+      { name: "3001 or above", filter: (n, raw) => !isNaN(n) && n >= 3001 },
+      { name: "2001 ~ 2910", filter: (n, raw) => !isNaN(n) && n >= 2001 && n <= 2910 },
+      { name: "1001 ~ 1910", filter: (n, raw) => !isNaN(n) && n >= 1001 && n <= 1910 },
+      { name: "301 ~ 910", filter: (n, raw) => !isNaN(n) && n >= 301 && n <= 910 },
+      { name: "Townhouse", filter: (n, raw) => isNaN(n) || raw.toUpperCase().includes('TH') }
+    ];
+
+    let html = "";
+    locations.forEach(loc => {
+      const locParcels = parcels.filter(p => p.location.toLowerCase().includes(loc.toLowerCase()));
+      if (locParcels.length > 0) {
+        html += `<div class="location-header">${loc.toUpperCase()} (Total: ${locParcels.length})</div>`;
+        ranges.forEach(range => {
+          let matchedUnits = locParcels.filter(p => {
+            const unitRaw = String(p.unit).trim();
+            const unitNum = parseInt(unitRaw.replace(/[^0-9]/g, ''));
+            return range.filter(unitNum, unitRaw);
+          });
+
+          matchedUnits.sort((a, b) => {
+            const numA = parseInt(String(a.unit).replace(/[^0-9]/g, '')) || 9999;
+            const numB = parseInt(String(b.unit).replace(/[^0-9]/g, '')) || 9999;
+            return numA - numB;
+          });
+
+          if (matchedUnits.length > 0) {
+            html += `
+              <div class="storage-row">
+                <div class="range-label">${range.name}</div>
+                <div class="unit-container">
+                  ${matchedUnits.map(p => `<span class="unit-tag" onclick="this.style.background='#d4edda'; this.style.borderColor='#28a745';">${p.unit}</span>`).join('')}
+                </div>
+              </div>`;
+          }
+        });
+      }
+    });
+    area.innerHTML = html || '<p class="text-muted text-center">No categorized parcels found.</p>';
+  });
+}
+
+/**
+ * 執行單位往績查詢 (Unit Inquiry)
+ */
+function runUnitInquiry() {
+  const unit = document.getElementById('queryUnitInput').value;
+  if (!unit) return;
+  const resDiv = document.getElementById('unitInquiryResult');
+  resDiv.innerHTML = "Searching...";
+
+  // 🚀 API Call: 獲取單位歷史詳細數據
+  apiCall('getUnitStats', { unit: unit, action: 'getUnitDetailedHistory' }).then(res => {
+    const data = res.data;
+    let mthHtml = Object.keys(data.monthlyStats).sort().reverse().map(m => {
+      let count = data.monthlyStats[m];
+      let color = count > 12 ? 'text-danger fw-bold' : '';
+      return `<tr><td>${m}</td><td class="${color}">${count}</td></tr>`;
+    }).join('');
+
+    resDiv.innerHTML = `
+      <div class="alert ${data.balance > 0 ? 'alert-danger' : 'alert-success'} mb-3">
+        <b>Current Balance: $${data.balance}</b><br>
+        <small>(Total Fee: $${data.totalFeeOwed} | Total Paid: $${data.totalPaid})</small>
+      </div>
+      <table class="table table-sm small">
+        <thead><tr><th>Month</th><th>Count (Excl. Lobby)</th></tr></thead>
+        <tbody>${mthHtml || '<tr><td colspan="2">No records found</td></tr>'}</tbody>
+      </table>`;
+  });
+}
+
+/**
+ * UI 輔助功能：視窗縮放與 Overlay
+ */
+function resizeCanvas() {
+  const c = document.getElementById('signature-pad'); 
+  if (!c || !signaturePad) return;
+  const r = Math.max(window.devicePixelRatio || 1, 1);
+  c.width = c.offsetWidth * r; c.height = c.offsetHeight * r;
+  c.getContext("2d").scale(r, r); 
+  signaturePad.clear();
+}
+
+function toggleOverlay(show) {
+  document.getElementById('toolOverlay').style.display = show ? 'block' : 'none';
+  if (show) refreshStorageVisual();
+}
+
+function getStaffName() {
+  const n = document.getElementById('currentStaff').value.trim();
+  if (!n) { Swal.fire("Identification Required", "Enter Staff Name", "warning"); return null; }
+  return n;
+}
+
+</script>
+</body>
+</html>
