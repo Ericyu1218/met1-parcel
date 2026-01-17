@@ -1,0 +1,21 @@
+{
+  "name": "MET 1 Parcel System",
+  "short_name": "MET1 Parcel",
+  "description": "Concierge Parcel Management System for MET 1",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#D00000",
+  "icons": [
+    {
+      "src": "https://drive.google.com/thumbnail?sz=w192&id=1jo8quID7GZ8EF9OeRJ3GsbaLDEJFg7ss",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://drive.google.com/thumbnail?sz=w512&id=1jo8quID7GZ8EF9OeRJ3GsbaLDEJFg7ss",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
